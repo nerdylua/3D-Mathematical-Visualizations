@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -456,14 +456,15 @@
             }
         }
 
-        // Load saved theme
+        // Load saved theme or default to dark
         const savedTheme = localStorage.getItem('theme');
         const toggle = document.getElementById('themeToggle');
         
-        if (savedTheme === 'dark') {
+        if (savedTheme === 'dark' || !savedTheme) {
             document.documentElement.setAttribute('data-theme', 'dark');
             toggle.textContent = '☀️';
         } else {
+            document.documentElement.removeAttribute('data-theme');
             toggle.textContent = '🌙';
         }
     </script>

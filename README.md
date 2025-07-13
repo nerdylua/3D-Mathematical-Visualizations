@@ -24,10 +24,6 @@ Open any HTML file in a modern web browser. No installation required.
 - WebGL2 compatible browser (Chrome, Firefox, Safari, Edge)
 - Desktop recommended for best performance
 
-## Credits
-
-**Original Creator**: [@VoXelo](https://codepen.io/VoXelo)
+### Credits [Techartist](https://x.com/techartist_)
 
 These visualizations were created using Grok 4 AI assistance.
-
-*Experience the beauty of mathematics through interactive 3D visualization* ✨ 
