@@ -10,20 +10,17 @@ A collection of interactive 3D mathematical and scientific visualizations.
 
 **Morphing Particles** (`metamorphosis.html`) - Particle system that morphs between mathematical patterns like torus knots and attractors.
 
+## Technologies Used
+
+- [Three.js](https://threejs.org/) (3D rendering, scene, camera, postprocessing, controls)
+- WebGL & WebGL2 (browser-based GPU rendering)
+- GLSL / GLSL ES 3.00 (OpenGL Shading Language for custom vertex and fragment shaders)
+- Custom ray marching and fractal distance estimation shaders
+
 ## Usage
 
 Open any HTML file in a modern web browser. No installation required.
 
-**Controls:**
-- Drag to rotate view
-- Scroll to zoom
-- Click for interactions (varies by visualization)
-
-## Requirements
-
-- WebGL2 compatible browser (Chrome, Firefox, Safari, Edge)
-- Desktop recommended for best performance
-
-### Credits [Techartist](https://x.com/techartist_)
+### Credits: [Techartist](https://x.com/techartist_)
 
 These visualizations were created using Grok 4 AI assistance.
