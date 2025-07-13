@@ -1,0 +1,297 @@
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mandelbulb Fractal</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background-color: #000;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+        .info {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            color: rgba(255, 255, 255, 0.7);
+            font-family: 'Inter', sans-serif;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px #000;
+            pointer-events: none;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap" rel="stylesheet">
+
+    <canvas id="canvas"></canvas>
+    <div class="info">Click to morph the fractal</div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const gl = canvas.getContext('webgl2');
+
+        if (!gl) {
+            document.body.innerHTML = 'Sorry, your browser does not support WebGL2.';
+        }
+
+        const vsSource = `#version 300 es
+            in vec4 a_position;
+            void main() {
+                gl_Position = a_position;
+            }
+        `;
+
+        const fsSource = `#version 300 es
+            precision highp float;
+
+            uniform float u_time;
+            uniform float u_morph;
+            uniform vec2 u_res;
+
+            out vec4 fragColor;
+
+            #define MAX_STEPS 128
+            #define MAX_DIST 100.0
+            #define SURF_DIST 0.001
+            #define PI 3.14159265359
+
+            float mandelbulbDE(vec3 pos, float power) {
+                vec3 z = pos;
+                float dr = 1.0;
+                float r = 0.0;
+                const int ITER = 15;
+                for (int i = 0; i < ITER; i++) {
+                    r = length(z);
+                    if (r > 2.0) break;
+
+                    float theta = acos(z.z / r);
+                    float phi = atan(z.y, z.x);
+                    dr = pow(r, power - 1.0) * power * dr + 1.0;
+
+                    float zr = pow(r, power);
+                    theta = theta * power;
+                    phi = phi * power;
+
+                    z = zr * vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
+                    z += pos;
+                }
+                return 0.5 * log(r) * r / dr;
+            }
+
+            vec2 sceneSDF(vec3 p) {
+                float power = mix(2.0, 8.0, u_morph);
+                float dFractal = mandelbulbDE(p, power);
+                float dPlane = p.y + 1.5;
+
+                if (dFractal < dPlane) {
+                    return vec2(dFractal, 1.0);
+                } else {
+                    return vec2(dPlane, 2.0);
+                }
+            }
+
+            vec3 getNormal(vec3 p) {
+                vec2 e = vec2(0.001, 0.0);
+                return normalize(vec3(
+                    sceneSDF(p + e.xyy).x - sceneSDF(p - e.xyy).x,
+                    sceneSDF(p + e.yxy).x - sceneSDF(p - e.yxy).x,
+                    sceneSDF(p + e.yyx).x - sceneSDF(p - e.yyx).x
+                ));
+            }
+
+            vec2 rayMarch(vec3 ro, vec3 rd) {
+                float dist = 0.0;
+                float materialID = -1.0;
+                for (int i = 0; i < MAX_STEPS; i++) {
+                    vec3 p = ro + rd * dist;
+                    vec2 d = sceneSDF(p);
+                    materialID = d.y;
+                    if (d.x < SURF_DIST) return vec2(dist, materialID);
+                    if (dist > MAX_DIST) break;
+                    dist += d.x;
+                }
+                return vec2(MAX_DIST, -1.0);
+            }
+
+            float hash(vec2 p) {
+                return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453);
+            }
+
+            vec3 renderSky(vec3 rd) {
+                vec3 col = vec3(0.0);
+                vec2 p = rd.xy * 2.0;
+                float star = hash(p) * 100.0;
+                col += vec3(smoothstep(0.99, 1.0, star));
+                return col * vec3(0.8, 0.9, 1.0);
+            }
+
+            float softShadow(vec3 ro, vec3 rd, float k) {
+                float res = 1.0;
+                float t = 0.01;
+                for (int i = 0; i < 32; i++) {
+                    float h = sceneSDF(ro + rd * t).x;
+                    res = min(res, k * h / t);
+                    t += clamp(h, 0.01, 0.5);
+                    if (h < SURF_DIST || t > 20.0) break;
+                }
+                return clamp(res, 0.0, 1.0);
+            }
+
+            vec3 lighting(vec3 p, vec3 rd, vec3 n, float d) {
+                vec3 col = vec3(0.0);
+                vec3 viewDir = normalize(-rd);
+
+                vec3 lightPos1 = vec3(5.0 * cos(u_time * 0.2), 5.0, 5.0 * sin(u_time * 0.2));
+                vec3 lightDir1 = normalize(lightPos1 - p);
+                float diff1 = max(dot(n, lightDir1), 0.0);
+                float shadow1 = softShadow(p + n * SURF_DIST * 2.0, lightDir1, 32.0);
+                vec3 lightCol1 = vec3(0.6, 0.8, 1.0);
+                col += diff1 * shadow1 * lightCol1;
+
+                vec3 lightPos2 = vec3(-5.0 * cos(u_time * 0.2), -3.0, -5.0 * sin(u_time * 0.2));
+                vec3 lightDir2 = normalize(lightPos2 - p);
+                float diff2 = max(dot(n, lightDir2), 0.0);
+                vec3 lightCol2 = vec3(1.0, 0.7, 0.3);
+                col += diff2 * 0.2 * lightCol2;
+
+                float rim = pow(1.0 - max(dot(viewDir, n), 0.0), 2.0) * 2.0;
+                col += rim * vec3(1.0, 1.0, 1.0);
+
+                vec3 halfDir = normalize(lightDir1 + viewDir);
+                float spec = pow(max(dot(n, halfDir), 0.0), 64.0);
+                col += spec * vec3(1.0);
+
+                float ao = clamp(sceneSDF(p + n * 0.1).x / 0.1, 0.0, 1.0);
+                col *= ao;
+
+                return col;
+            }
+
+            void main() {
+                vec2 uv = (gl_FragCoord.xy - 0.5 * u_res.xy) / u_res.y;
+
+                float angle = u_time * 0.15;
+                vec3 ro = vec3(3.2 * sin(angle), 0.0, -3.2 * cos(angle));
+                vec3 target = vec3(0.0, 0.0, 0.0);
+                vec3 camDir = normalize(target - ro);
+                vec3 camUp = vec3(0.0, 1.0, 0.0);
+                vec3 camRight = normalize(cross(camUp, camDir));
+                vec3 camUpCorrected = cross(camDir, camRight);
+                vec3 rd = normalize(uv.x * camRight + uv.y * camUpCorrected + 1.5 * camDir);
+
+                vec2 result = rayMarch(ro, rd);
+                float d = result.x;
+                float materialID = result.y;
+                vec3 col;
+
+                if (d < MAX_DIST) {
+                    vec3 p = ro + rd * d;
+                    vec3 n = getNormal(p);
+
+                    if (materialID == 1.0) {
+                        col = lighting(p, rd, n, d);
+                        col *= 0.5 + 0.5 * cos(3.0 + p * 2.0 + vec3(0, 0.5, 1.0));
+                    } else {
+                        col = vec3(0.1);
+                        vec3 reflectedRay = reflect(rd, n);
+                        vec2 reflection = rayMarch(p + n * SURF_DIST * 2.0, reflectedRay);
+                        if(reflection.x < MAX_DIST){
+                            vec3 reflectedPos = p + n * SURF_DIST * 2.0 + reflectedRay * reflection.x;
+                            vec3 reflectedNormal = getNormal(reflectedPos);
+                            vec3 reflectedCol = lighting(reflectedPos, reflectedRay, reflectedNormal, reflection.x);
+                            reflectedCol *= 0.5 + 0.5 * cos(3.0 + reflectedPos * 2.0 + vec3(0, 0.5, 1.0));
+
+                            col = mix(col, reflectedCol, 0.7);
+                        } else {
+                            col = mix(col, renderSky(reflectedRay), 0.7);
+                        }
+                    }
+
+                    float fog = exp(-0.02 * d * d);
+                    vec3 fogColor = vec3(0.1, 0.0, 0.15);
+                    col = mix(fogColor, col, fog);
+
+                } else {
+                    col = renderSky(rd);
+                }
+
+                col = pow(col, vec3(0.4545));
+                col = clamp(col, 0.0, 1.0);
+
+                fragColor = vec4(col, 1.0);
+            }
+        `;
+
+        function compileShader(type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error('An error occurred compiling the shaders: ' + gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        const vertexShader = compileShader(gl.VERTEX_SHADER, vsSource);
+        const fragmentShader = compileShader(gl.FRAGMENT_SHADER, fsSource);
+
+        const program = gl.createProgram();
+        gl.attachShader(program, vertexShader);
+        gl.attachShader(program, fragmentShader);
+        gl.linkProgram(program);
+
+        if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+            console.error('Unable to initialize the shader program: ' + gl.getProgramInfoLog(program));
+        }
+        gl.useProgram(program);
+
+        const vertices = new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]);
+        const buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+        const posLoc = gl.getAttribLocation(program, 'a_position');
+        gl.enableVertexAttribArray(posLoc);
+        gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+        const timeLoc = gl.getUniformLocation(program, 'u_time');
+        const morphLoc = gl.getUniformLocation(program, 'u_morph');
+        const resLoc = gl.getUniformLocation(program, 'u_res');
+
+        let targetMorph = 0;
+        let currentMorph = 0;
+        const morphSpeed = 0.02;
+
+        canvas.addEventListener('click', () => {
+            targetMorph = targetMorph === 0 ? 1 : 0;
+        });
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+            gl.uniform2f(resLoc, canvas.width, canvas.height);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        function renderLoop(time) {
+            time *= 0.001;
+
+            currentMorph += (targetMorph - currentMorph) * morphSpeed;
+
+            gl.uniform1f(timeLoc, time);
+            gl.uniform1f(morphLoc, currentMorph);
+
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+            requestAnimationFrame(renderLoop);
+        }
+        requestAnimationFrame(renderLoop);
+    </script>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathematical Visualizations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            --bg-card: #ffffff;
+            --text-primary: #0f172a;
+            --text-secondary: #64748b;
+            --text-accent: #475569;
+            --border-color: rgba(0, 0, 0, 0.05);
+            --shadow-light: rgba(0, 0, 0, 0.05);
+            --shadow-medium: rgba(0, 0, 0, 0.1);
+            --tag-bg: #f1f5f9;
+            --icon-check: #10b981;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            --bg-card: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --text-accent: #cbd5e1;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --shadow-light: rgba(0, 0, 0, 0.3);
+            --shadow-medium: rgba(0, 0, 0, 0.4);
+            --tag-bg: #334155;
+            --icon-check: #22d3ee;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            background: var(--bg-primary);
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 56px;
+            height: 56px;
+            border-radius: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            box-shadow: 0 4px 12px var(--shadow-light);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px var(--shadow-medium);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        header {
+            text-align: center;
+            padding: 5rem 0 4rem;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 5vw, 4.5rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.25rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .visualizations {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            padding-bottom: 5rem;
+        }
+
+        .viz-card {
+            background: var(--bg-card);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: 
+                0 4px 6px var(--shadow-light),
+                0 10px 20px var(--shadow-light);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .viz-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            border-radius: 20px 20px 0 0;
+            transition: all 0.3s ease;
+        }
+
+        .viz-card:nth-child(1)::before {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .viz-card:nth-child(2)::before {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .viz-card:nth-child(3)::before {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .viz-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 8px 16px var(--shadow-medium),
+                0 20px 40px var(--shadow-medium);
+        }
+
+        .viz-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .viz-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            margin-right: 1rem;
+            flex-shrink: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .viz-card:nth-child(1) .viz-icon {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+        }
+
+        .viz-card:nth-child(2) .viz-icon {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            box-shadow: 0 8px 24px rgba(240, 147, 251, 0.3);
+        }
+
+        .viz-card:nth-child(3) .viz-icon {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            box-shadow: 0 8px 24px rgba(79, 172, 254, 0.3);
+        }
+
+        .viz-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .viz-description {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        .viz-meta {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+        }
+
+        .viz-tech {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .tech-tag {
+            background: var(--tag-bg);
+            color: var(--text-accent);
+            padding: 0.4rem 0.8rem;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .viz-card:hover .tech-tag {
+            transform: translateY(-2px);
+        }
+
+        .viz-arrow {
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .viz-card:hover .viz-arrow {
+            color: var(--text-primary);
+            transform: translateX(6px);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+            margin-top: 1rem;
+        }
+
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        .feature-icon {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--icon-check);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.7rem;
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 1rem;
+            }
+
+            .theme-toggle {
+                top: 1rem;
+                right: 1rem;
+                width: 48px;
+                height: 48px;
+            }
+
+            header {
+                padding: 4rem 0 3rem;
+            }
+
+            .visualizations {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                padding-bottom: 3rem;
+            }
+
+            .viz-card {
+                padding: 1.5rem;
+            }
+
+            .viz-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+
+            .viz-icon {
+                margin-right: 0;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .viz-meta {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+        🌙
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>Mathematical Visualizations</h1>
+            <p class="subtitle">Interactive 3D mathematical concepts</p>
+        </header>
+
+        <div class="visualizations">
+            <a href="black-hole.html" class="viz-card">
+                <div class="viz-header">
+                    <div class="viz-icon">🕳️</div>
+                    <h2 class="viz-title">Black Hole</h2>
+                </div>
+                <p class="viz-description">
+                    Gravitational lensing with dynamic accretion disk and star field
+                </p>
+                <div class="feature-grid">
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Lensing Effects
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Event Horizon
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        150k Stars
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Interactive
+                    </div>
+                </div>
+                <div class="viz-meta">
+                    <div class="viz-tech">
+                        <span class="tech-tag">Three.js</span>
+                        <span class="tech-tag">GLSL</span>
+                    </div>
+                    <div class="viz-arrow">→</div>
+                </div>
+            </a>
+
+            <a href="mandelbulb-fractal.html" class="viz-card">
+                <div class="viz-header">
+                    <div class="viz-icon">🌀</div>
+                    <h2 class="viz-title">Mandelbulb</h2>
+                </div>
+                <p class="viz-description">
+                    3D fractal renderer with morphing capabilities and lighting
+                </p>
+                <div class="feature-grid">
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Ray Marching
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Morphing
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Soft Shadows
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Real-time
+                    </div>
+                </div>
+                <div class="viz-meta">
+                    <div class="viz-tech">
+                        <span class="tech-tag">WebGL2</span>
+                        <span class="tech-tag">Shaders</span>
+                    </div>
+                    <div class="viz-arrow">→</div>
+                </div>
+            </a>
+
+            <a href="metamorphosis.html" class="viz-card">
+                <div class="viz-header">
+                    <div class="viz-icon">✨</div>
+                    <h2 class="viz-title">Particles</h2>
+                </div>
+                <p class="viz-description">
+                    15k particles morphing between mathematical patterns
+                </p>
+                <div class="feature-grid">
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Patterns
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Transitions
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Bloom Effects
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Attractors
+                    </div>
+                </div>
+                <div class="viz-meta">
+                    <div class="viz-tech">
+                        <span class="tech-tag">Particles</span>
+                        <span class="tech-tag">Three.js</span>
+                    </div>
+                    <div class="viz-arrow">→</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function toggleTheme() {
+            const html = document.documentElement;
+            const toggle = document.getElementById('themeToggle');
+            
+            if (html.getAttribute('data-theme') === 'dark') {
+                html.removeAttribute('data-theme');
+                toggle.textContent = '🌙';
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.setAttribute('data-theme', 'dark');
+                toggle.textContent = '☀️';
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('theme');
+        const toggle = document.getElementById('themeToggle');
+        
+        if (savedTheme === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            toggle.textContent = '☀️';
+        } else {
+            toggle.textContent = '🌙';
+        }
+    </script>
+</body>
+</html> 
