@@ -154,6 +154,10 @@
             background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
         }
 
+        .viz-card.neural-network-card::before {
+            background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+        }
+
         .viz-card:hover {
             transform: translateY(-8px) scale(1.02);
             box-shadow: 
@@ -194,6 +198,16 @@
         .viz-card:nth-child(3) .viz-icon {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             box-shadow: 0 8px 24px rgba(79, 172, 254, 0.3);
+        }
+
+        .viz-card:nth-child(4) .viz-icon {
+            background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
+            box-shadow: 0 8px 24px rgba(247, 151, 30, 0.3);
+        }
+
+        .viz-card:nth-child(6) .viz-icon {
+            background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%);
+            box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);
         }
 
         .viz-title {
@@ -479,6 +493,50 @@
                     <div class="viz-tech">
                         <span class="tech-tag">p5.js</span>
                         <span class="tech-tag">Particles</span>
+                    </div>
+                    <div class="viz-arrow">→</div>
+                </div>
+            </a>
+
+            <a href="neural-network.html" class="viz-card neural-network-card">
+                <div class="viz-header">
+                    <div class="viz-icon neural-network-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #dc2626 100%); box-shadow: 0 8px 24px rgba(245, 158, 11, 0.3);">
+                        <svg width="36" height="36" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="18" cy="18" r="13" fill="#fff" fill-opacity="0.7"/>
+                            <ellipse cx="18" cy="18" rx="10" ry="4" stroke="#fff" stroke-width="2" fill="none"/>
+                            <circle cx="10" cy="18" r="2.5" fill="#f59e0b"/>
+                            <circle cx="26" cy="18" r="2.5" fill="#dc2626"/>
+                            <circle cx="18" cy="10" r="2.5" fill="#f59e0b"/>
+                            <circle cx="18" cy="26" r="2.5" fill="#dc2626"/>
+                        </svg>
+                    </div>
+                    <h2 class="viz-title">Neural Network</h2>
+                </div>
+                <p class="viz-description">
+                    Interactive 3D neural network with pulses and formations
+                </p>
+                <div class="feature-grid">
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Formations
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Pulses
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Themes
+                    </div>
+                    <div class="feature">
+                        <div class="feature-icon">✓</div>
+                        Density
+                    </div>
+                </div>
+                <div class="viz-meta">
+                    <div class="viz-tech">
+                        <span class="tech-tag">Three.js</span>
+                        <span class="tech-tag">GLSL</span>
                     </div>
                     <div class="viz-arrow">→</div>
                 </div>
